@@ -8,7 +8,7 @@ test_file_name_size = 221
 
 #def test_get_size():
 #    def mockreturn(argv):
-#        return ("kaka","mauka")
+#        return ("stuff")
 #    import os
 #    patch = os.stat("test/test.log")
 #    monkeypatch.setattr('patch.st_size', mockreturn)
@@ -40,17 +40,17 @@ def test_get_file_name():
 
 
 def test_get_opener_type():
-    opener = reican.get_opener("test/test.log", stats)
+    opener = reican.get_opener(test_file_name, stats)
     assert isinstance(opener, types.BuiltinFunctionType)
 
 
 def test_get_opener_gzip_type():
-    opener = reican.get_opener("test/test.log.gz", stats)
+    opener = reican.get_opener(test_file_name+".gz", stats)
     assert isinstance(opener, types.FunctionType)
 
 
 def test_get_opener_lzma_type():
-    opener = reican.get_opener("test/test.log.lzma", stats)
+    opener = reican.get_opener(test_file_name+".lzma", stats)
     assert isinstance(opener, types.FunctionType)
 
 
@@ -61,19 +61,19 @@ def test_humanize_delta():
 
 
 def test_opening_plaintext():
-    opener = reican.get_opener("test/test.log", stats)
+    opener = reican.get_opener(test_file_name, stats)
     with opener("test/test.log") as logfile:
         assert len(logfile.readlines()) == 3
 
 
 def test_get_opening_gzip():
-    opener = reican.get_opener("test/test.log.gz", stats)
+    opener = reican.get_opener(test_file_name+".gz", stats)
     with opener("test/test.log.gz") as logfile:
         assert len(logfile.readlines()) == 3
 
 
 def test_get_opening_lzma():
-    opener = reican.get_opener("test/test.log.lzma", stats)
+    opener = reican.get_opener(test_file_name+".lzma", stats)
     with opener("test/test.log.lzma") as logfile:
         assert len(logfile.readlines()) == 3
 
