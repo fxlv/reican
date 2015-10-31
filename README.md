@@ -1,6 +1,6 @@
-# Loggy
-Do funny stuff with logs.
-Not much here yet.
+# Reican
+Reican goes and finds stuff from your logs.
+Not much here yet but soon the Reican will be able to do useful stuff.
 
 ## Timestamps
 Supported formats:
