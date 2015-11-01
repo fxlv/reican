@@ -7,10 +7,10 @@ import arrow
 from logbook import Logger
 from logbook import FileHandler
 
-# max file size in lines
-MAX_LINES_TO_READ = 11000
+# max file size in lines (10M by default)
+MAX_LINES_TO_READ = 10000000
 # max file size in megabytes
-MAX_FILE_SIZE = "2M"
+MAX_FILE_SIZE = "500M"
 # where to write application log
 LOG_FILE_NAME = "reican.log"
 
@@ -198,7 +198,7 @@ def main():
                 print "End hour: {}".format(end_hour)
                 per_hour_aggregation[start_hour] = 0
             # line analysis and aggregation happens here
-            print time, line
+            log.info(time, line)
             stats.increment_line_counter()
             per_hour_aggregation[start_hour] += 1
             # every line could be the last one, so save the time every time
