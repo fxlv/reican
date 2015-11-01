@@ -45,12 +45,12 @@ def test_get_opener_type():
 
 
 def test_get_opener_gzip_type():
-    opener = reican.get_opener(test_file_name+".gz", stats)
+    opener = reican.get_opener(test_file_name + ".gz", stats)
     assert isinstance(opener, types.FunctionType)
 
 
 def test_get_opener_lzma_type():
-    opener = reican.get_opener(test_file_name+".lzma", stats)
+    opener = reican.get_opener(test_file_name + ".lzma", stats)
     assert isinstance(opener, types.FunctionType)
 
 
@@ -67,13 +67,13 @@ def test_opening_plaintext():
 
 
 def test_get_opening_gzip():
-    opener = reican.get_opener(test_file_name+".gz", stats)
+    opener = reican.get_opener(test_file_name + ".gz", stats)
     with opener("test/test.log.gz") as logfile:
         assert len(logfile.readlines()) == 3
 
 
 def test_get_opening_lzma():
-    opener = reican.get_opener(test_file_name+".lzma", stats)
+    opener = reican.get_opener(test_file_name + ".lzma", stats)
     with opener("test/test.log.lzma") as logfile:
         assert len(logfile.readlines()) == 3
 
@@ -92,13 +92,13 @@ def test_stats_line_increment():
 def test_get_timestamp_1():
     test_string = "2015-10-30T20:20:11.563278+00:00 lalala lalalalalallalalal"
     test_timestamp = "2015-10-30T20:20:11.563278+00:00"
-    assert reican.get_timestamp(test_string) == test_timestamp
+    assert reican.get_timestamp(test_string)[0] == test_timestamp
 
 
 def test_get_timestamp_2():
     test_string = "[2015-10-31 13:54:42.146481] DEBUG: Reican: Using gzip to open the file"
     test_timestamp = "2015-10-31 13:54:42.146481"
-    assert reican.get_timestamp(test_string) == test_timestamp
+    assert reican.get_timestamp(test_string)[0] == test_timestamp
 
 
 def test_get_timestamp_3():
@@ -108,4 +108,10 @@ def test_get_timestamp_3():
     AppleWebKit/537.36 (KHTML,'''
 
     test_timestamp = "1446314353.403"
-    assert reican.get_timestamp(test_string) == test_timestamp
+    assert reican.get_timestamp(test_string)[0] == test_timestamp
+
+
+def test_get_timestamp_4():
+    test_string = "2015.11.01 15:04:39 #72651112 SERVER: some stuff happened here"
+    test_timestamp = "2015.11.01 15:04:39"
+    assert reican.get_timestamp(test_string)[0] == test_timestamp
