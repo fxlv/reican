@@ -103,28 +103,41 @@ class Stats:
 
 
 def get_timestamp(line):
+    """
+    Finds the timestamp in a log line.
+    If needed, timestamp format is also returned
+    that can be later used by 'arrow'
+
+    Returns a tuple of (timestamp, timestamp_format)
+    """
     # Currently supported timestamps
     # 2015-10-30T20:20:11.563278+00:00
     # [2015-10-31 11:13:43.541912]
     # [1446314353.403]
-    regexes = ("([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9:]+\.[0-9]+)",
-               "^([0-9]{4}\-[0-9]{2}\-[0-9]{2}T[0-9:\.\+_-]+) ",
-               "([0-9]{10}\.[0-9]{3})")
+    # 2015.11.01 15:04:39
+    regexes = {"([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9:]+\.[0-9]+)": None,
+               "^([0-9]{4}\-[0-9]{2}\-[0-9]{2}T[0-9:\.\+_-]+) ": None,
+               "([0-9]{10}\.[0-9]{3})": None,
+               "^([0-9]{4}\.[0-9]{2}\.[0-9]{2}\s[0-9:]{2}:[0-9]{2}:[0-9]{2})":
+               "YYYY.MM.DD HH:mm:ss"}
+    time_format = None
     for regex in regexes:
         r = re.search(regex, line)
         if r:
             # if match is found, exit the loop
             log.debug("Timestamp found")
+            time_format = regexes[regex]
             break
     else:
         log.error("Could not match the timestamp")
+        log.error(line)
         # if timestamp was not macthed, None will be returned
         # and  the line will be skipped
-        return None
+        return None, None
     if len(r.groups()) == 1:
-        return r.groups()[0]
+        return r.groups()[0], time_format
     else:
-        return False
+        return False, False
 
 
 def get_size(file_name):
@@ -183,7 +196,13 @@ def main():
                 break
             line = line.strip()
             # use arrow module to translate timestamp to python datetime object
-            time = arrow.get(get_timestamp(line))
+            timestamp, time_format = get_timestamp(line)
+            # some time formats are not recognized by arrow, 
+            # therefore, if needed, a 'time_format' string is passed to arrow
+            if time_format:
+                time = arrow.get(timestamp, time_format)
+            else:
+                time = arrow.get(timestamp)
             # save first timestamp found so that delta can be calculated later
             if not times['start']:
                 times['start'] = time
