@@ -25,4 +25,9 @@ Inside the virtualenv you might want to have:
 * backports.lzma 
 * monkeypatch
 
+Install them using
+```
+pip install -r requirements.txt
+```
+
 
