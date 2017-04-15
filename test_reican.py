@@ -1,9 +1,13 @@
-import reican
-import types
-import sys
 import datetime
+import sys
+import types
+import pytest
+import reican
 
+# cspell:ignore reican, pytest
 test_file_name = "test/test.log"
+missing_test_file_name = "test/test_missing.log"
+
 test_file_name_size = 221
 
 #def test_get_size():
@@ -15,6 +19,29 @@ test_file_name_size = 221
 #    print reican.get_size("test/test.log")
 
 stats = reican.Stats(test_file_name)
+
+
+def test_die_1():
+    """Test the die() function."""
+    with pytest.raises(SystemExit):
+        reican.die()
+
+
+def test_die_2(capsys):
+    """Test die() with optional argument."""
+    with pytest.raises(SystemExit):
+        reican.die("Something")
+    out, err = capsys.readouterr()
+    assert out == "\nSomething\n\n"
+
+
+def test_usage(capsys):
+    """Test that Usage message is displayed correctly."""
+    with pytest.raises(SystemExit):
+        reican.usage()
+    out, err = capsys.readouterr()
+    assert len(out) > 40
+    assert "Usage:" in out
 
 
 def test_get_size():
@@ -37,6 +64,22 @@ def test_file_name_too_big_bigfile():
 def test_get_file_name():
     sys.argv = ("./reican.py", test_file_name)
     assert reican.get_file_name() == test_file_name
+
+
+def test_get_file_name_2():
+    """get_file_name() only works of 2 arguments are passed to reican.py."""
+    sys.argv = ("./reican.py")
+    with pytest.raises(SystemExit):
+        reican.get_file_name()
+
+
+def test_get_file_name_3(capsys):
+    """Test non-existing file name."""
+    sys.argv = ("./reican.py", missing_test_file_name)
+    with pytest.raises(SystemExit) as exc:
+        reican.get_file_name()
+    out, err = capsys.readouterr()
+    assert out == "\nFile test/test_missing.log does not exist\n\n"
 
 
 def test_get_opener_type():
@@ -115,3 +158,9 @@ def test_get_timestamp_4():
     test_string = "2015.11.01 15:04:39 #72651112 SERVER: some stuff happened here"
     test_timestamp = "2015.11.01 15:04:39"
     assert reican.get_timestamp(test_string)[0] == test_timestamp
+
+
+def test_get_timestamp_5():
+    """Testing bad timestamp."""
+    test_string = "201lala5-10-30T20:20:11.563278+00:00 lalala lalalalalallalalal"
+    assert reican.get_timestamp(test_string) == (None, None)
