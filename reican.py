@@ -7,6 +7,9 @@ import arrow
 from logbook import Logger
 from logbook import FileHandler
 
+# I use cspell plugin for spell checking, and I want it to ignore few words
+# cspell:ignore reican lzma
+
 # max file size in lines (10M by default)
 MAX_LINES_TO_READ = 10000000
 # max file size in megabytes
@@ -23,9 +26,7 @@ log.info("Logging started")
 
 
 def die(msg=None):
-    """
-    Print a message and exit
-    """
+    """Print a message and exit."""
     if msg:
         print
         print msg
@@ -35,9 +36,7 @@ def die(msg=None):
 
 
 def usage():
-    """
-    Display usage information
-    """
+    """Display usage information."""
     print
     print "Usage:"
     print "{} <filename>".format(sys.argv[0])
