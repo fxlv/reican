@@ -2,9 +2,10 @@ import datetime
 import sys
 import types
 import pytest
+import mock
 import reican
 
-# cspell:ignore reican, pytest
+# cspell:ignore reican, pytest, lzma
 test_file_name = "test/test.log"
 missing_test_file_name = "test/test_missing.log"
 
@@ -97,11 +98,26 @@ def test_get_opener_lzma_type():
     assert isinstance(opener, types.FunctionType)
 
 
+def test_get_opener_lzma_missing():
+    """Test LZMA opener when LZMA module is missing."""
+    with mock.patch.dict('sys.modules', {'backports.lzma': None}):
+        with pytest.raises(SystemExit):
+            opener = reican.get_opener(test_file_name + ".lzma", stats)
+            assert isinstance(opener, types.FunctionType)
+
+
 def test_humanize_delta():
+    """Test a delta < than 1 hour."""
     expected_result = {'hours': 0, 'seconds': 50, 'minutes': 2}
     delta = datetime.timedelta(0, 170, 159069)
     assert expected_result == reican.humanize_delta(delta)
 
+
+def test_humanize_delta_2():
+    """Test a delta > than 1 hour."""
+    expected_result = {'hours': 3, 'seconds': 30, 'minutes': 6}
+    delta = datetime.timedelta(0, 11190, 189069)
+    assert expected_result == reican.humanize_delta(delta)
 
 def test_opening_plaintext():
     opener = reican.get_opener(test_file_name, stats)
