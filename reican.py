@@ -158,11 +158,10 @@ def file_too_big(file_name):
 
 
 def humanize_delta(delta):
-    seconds = delta.seconds
+    seconds = int(delta.total_seconds())
     days = 0
     minutes = 0
     hours = 0
-
     if seconds > 86400:
         days = seconds / 86400
     # calculate remaining seconds
@@ -175,7 +174,7 @@ def humanize_delta(delta):
         minutes = seconds / 60
     # calculate remaining seconds
     seconds = seconds - (minutes * 60)
-    return {'hours': hours, 'minutes': minutes, 'seconds': seconds}
+    return {'days': days, 'hours': hours, 'minutes': minutes, 'seconds': seconds}
 
 
 def main():

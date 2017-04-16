@@ -108,16 +108,24 @@ def test_get_opener_lzma_missing():
 
 def test_humanize_delta():
     """Test a delta < than 1 hour."""
-    expected_result = {'hours': 0, 'seconds': 50, 'minutes': 2}
-    delta = datetime.timedelta(0, 170, 159069)
+    expected_result = {'days': 0, 'hours': 0, 'seconds': 50, 'minutes': 2}
+    delta = datetime.timedelta(minutes=2, seconds=50)
     assert expected_result == reican.humanize_delta(delta)
 
 
-def test_humanize_delta_2():
+def test_humanize_delta_hour():
     """Test a delta > than 1 hour."""
-    expected_result = {'hours': 3, 'seconds': 30, 'minutes': 6}
-    delta = datetime.timedelta(0, 11190, 189069)
+    expected_result = {'days': 0, 'hours': 3, 'seconds': 10, 'minutes': 6}
+    delta = datetime.timedelta(hours=3, minutes=6, seconds=10)
     assert expected_result == reican.humanize_delta(delta)
+
+
+def test_humanize_delta_day():
+    """Test a delta > than 1 day."""
+    expected_result = {'days': 1, 'hours': 2, 'seconds': 25, 'minutes': 0}
+    delta = datetime.timedelta(days=1, hours=2, seconds=25)
+    assert expected_result == reican.humanize_delta(delta)
+
 
 def test_opening_plaintext():
     opener = reican.get_opener(test_file_name, stats)
