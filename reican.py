@@ -81,9 +81,7 @@ def get_file_name():
 
 
 class Stats:
-    """
-    Maintain some statistics
-    """
+    """Maintain some statistics."""
 
     def __init__(self, file_name):
         self.line_counter = 0
@@ -103,7 +101,8 @@ class Stats:
 
 def get_timestamp(line):
     """
-    Finds the timestamp in a log line.
+    Find the timestamp in a log line.
+
     If needed, timestamp format is also returned
     that can be later used by 'arrow'
 
@@ -114,11 +113,13 @@ def get_timestamp(line):
     # [2015-10-31 11:13:43.541912]
     # [1446314353.403]
     # 2015.11.01 15:04:39
-    regexes = {"([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9:]+\.[0-9]+)": None,
-               "^([0-9]{4}\-[0-9]{2}\-[0-9]{2}T[0-9:\.\+_-]+) ": None,
-               "([0-9]{10}\.[0-9]{3})": None,
-               "^([0-9]{4}\.[0-9]{2}\.[0-9]{2}\s[0-9:]{2}:[0-9]{2}:[0-9]{2})":
-               "YYYY.MM.DD HH:mm:ss"}
+    regexes = {
+        "([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9:]+\.[0-9]+)": None,
+        "^([0-9]{4}\-[0-9]{2}\-[0-9]{2}T[0-9:\.\+_-]+) ": None,
+        "([0-9]{10}\.[0-9]{3})": None,
+        "^([0-9]{4}\.[0-9]{2}\.[0-9]{2}\s[0-9:]{2}:[0-9]{2}:[0-9]{2})":
+        "YYYY.MM.DD HH:mm:ss"
+    }
     time_format = None
     for regex in regexes:
         r = re.search(regex, line)
@@ -140,17 +141,13 @@ def get_timestamp(line):
 
 
 def get_size(file_name):
-    """
-    Return file size in bytes
-    """
+    """Return file size in bytes."""
     size_bytes = os.stat(file_name).st_size
     return size_bytes
 
 
 def file_too_big(file_name):
-    """
-    Convert MAX_FILE_SIZE to bytes and check against the given file
-    """
+    """Convert MAX_FILE_SIZE to bytes and check against the given file."""
     max_file_size_bytes = float(MAX_FILE_SIZE.replace("M", "")) * 1024 * 1024
     if float(max_file_size_bytes) < get_size(file_name):
         return True
@@ -174,7 +171,12 @@ def humanize_delta(delta):
         minutes = seconds / 60
     # calculate remaining seconds
     seconds = seconds - (minutes * 60)
-    return {'days': days, 'hours': hours, 'minutes': minutes, 'seconds': seconds}
+    return {
+        'days': days,
+        'hours': hours,
+        'minutes': minutes,
+        'seconds': seconds
+    }
 
 
 def main():
@@ -195,7 +197,7 @@ def main():
             line = line.strip()
             # use arrow module to translate timestamp to python datetime object
             timestamp, time_format = get_timestamp(line)
-            # some time formats are not recognized by arrow, 
+            # some time formats are not recognized by arrow,
             # therefore, if needed, a 'time_format' string is passed to arrow
             if time_format:
                 time = arrow.get(timestamp, time_format)
