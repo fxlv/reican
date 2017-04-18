@@ -44,8 +44,15 @@ def usage():
     die(None)
 
 
+def is_readable(file_name):
+    """Check if we have permissions to read the file."""
+    return os.access(file_name, os.R_OK)
+
+
 def get_opener(file_name, stats):
     """
+    Return opener function based on extension fo the file.
+
     Support for different types of files based on their extension.
     Return 'open' object that can afterwards be iterated.
     """
@@ -184,6 +191,8 @@ def main():
     stats = Stats(file_name)
     if file_too_big(file_name):
         die("File is too big")
+    if not is_readable(file_name):
+        die("File is not readable. Check permissions?")
     opener = get_opener(file_name, stats)
     times = {'start': None, 'stop': None, 'delta': None}
     start_hour = None
