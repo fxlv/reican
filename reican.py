@@ -4,7 +4,6 @@ import os
 import gzip
 import re
 import arrow
-from binaryornot.check import is_binary
 from logbook import Logger
 from logbook import FileHandler
 
@@ -162,6 +161,17 @@ def file_too_big(file_name):
     return False
 
 
+def is_ascii(file_name):
+    """Check if a file is a text file."""
+    f = open(file_name)
+    content = f.read(100)
+    try:
+        content.decode()
+        return True
+    except UnicodeDecodeError:
+        return False
+
+
 def humanize_delta(delta):
     seconds = int(delta.total_seconds())
     days = 0
@@ -196,10 +206,8 @@ def main():
     if os.path.isdir(file_name):
         die("This appears to be a directory.")
 
-    if is_binary(file_name):
-        die("This appears to be a binary file.")
-
-
+    if not is_ascii(file_name):
+        die("This does not appear to be a text file.")
 
     if file_too_big(file_name):
         die("File is too big")
