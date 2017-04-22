@@ -4,11 +4,12 @@ import os
 import gzip
 import re
 import arrow
+from binaryornot.check import is_binary
 from logbook import Logger
 from logbook import FileHandler
 
 # I use cspell plugin for spell checking, and I want it to ignore few words
-# cspell:ignore reican lzma
+# cspell:ignore reican lzma isdir
 
 # max file size in lines (10M by default)
 MAX_LINES_TO_READ = 10000000
@@ -189,10 +190,20 @@ def humanize_delta(delta):
 def main():
     file_name = get_file_name()
     stats = Stats(file_name)
-    if file_too_big(file_name):
-        die("File is too big")
+
     if not is_readable(file_name):
         die("File is not readable. Check permissions?")
+    if os.path.isdir(file_name):
+        die("This appears to be a directory.")
+
+    if is_binary(file_name):
+        die("This appears to be a binary file.")
+
+
+
+    if file_too_big(file_name):
+        die("File is too big")
+
     opener = get_opener(file_name, stats)
     times = {'start': None, 'stop': None, 'delta': None}
     start_hour = None
