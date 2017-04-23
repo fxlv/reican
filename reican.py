@@ -120,12 +120,15 @@ def get_timestamp(line):
     # [2015-10-31 11:13:43.541912]
     # [1446314353.403]
     # 2015.11.01 15:04:39
+    # [2017/03/19 10:39:31]
+
     regexes = {
         "([0-9]{4}\-[0-9]{2}\-[0-9]{2}\s[0-9:]+\.[0-9]+)": None,
         "^([0-9]{4}\-[0-9]{2}\-[0-9]{2}T[0-9:\.\+_-]+) ": None,
         "([0-9]{10}\.[0-9]{3})": None,
         "^([0-9]{4}\.[0-9]{2}\.[0-9]{2}\s[0-9:]{2}:[0-9]{2}:[0-9]{2})":
-        "YYYY.MM.DD HH:mm:ss"
+        "YYYY.MM.DD HH:mm:ss",
+        "([0-9]{4}/[0-9]{2}/[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2})": "YYYY/MM/DD HH:mm:ss"
     }
     time_format = None
     for regex in regexes:
@@ -145,6 +148,19 @@ def get_timestamp(line):
         return r.groups()[0], time_format
     else:
         return False, False
+
+
+def get_time(log_line):
+    """Parse log line and return timestamp."""
+    # use arrow module to translate timestamp to python datetime object
+    timestamp, time_format = get_timestamp(log_line)
+    # some time formats are not recognized by arrow,
+    # therefore, if needed, a 'time_format' string is passed to arrow
+    if time_format:
+        time = arrow.get(timestamp, time_format)
+    else:
+        time = arrow.get(timestamp)
+    return time
 
 
 def get_size(file_name):
@@ -173,6 +189,7 @@ def is_ascii(file_name):
 
 
 def humanize_delta(delta):
+    """Interpret the delta in human friendly units."""
     seconds = int(delta.total_seconds())
     days = 0
     minutes = 0
@@ -195,6 +212,20 @@ def humanize_delta(delta):
         'minutes': minutes,
         'seconds': seconds
     }
+
+
+def human_delta_string(delta):
+    """Return a string representation of the delta."""
+    delta_string = ""
+    if delta['days'] > 0:
+        delta_string += "{} days, ".format(delta['days'])
+    if delta['hours'] > 0:
+        delta_string += "{} hours, ".format(delta['hours'])
+    if delta['minutes'] > 0:
+        delta_string += "{} minutes, ".format(delta['minutes'])
+    if delta['seconds'] > 0:
+        delta_string += "{} seconds.".format(delta['seconds'])
+    return delta_string
 
 
 def main():
@@ -223,30 +254,27 @@ def main():
                 log.error("MAX_LINES_TO_READ reached")
                 break
             line = line.strip()
-            # use arrow module to translate timestamp to python datetime object
-            timestamp, time_format = get_timestamp(line)
-            # some time formats are not recognized by arrow,
-            # therefore, if needed, a 'time_format' string is passed to arrow
-            if time_format:
-                time = arrow.get(timestamp, time_format)
-            else:
-                time = arrow.get(timestamp)
-            # save first timestamp found so that delta can be calculated later
-            if not times['start']:
-                times['start'] = time
+            # parse line and get the timestamp
+            time = get_time(line)
             if not time:
                 # skip the line if there's no timestamp
                 pass
-            # determine the start hour
+            # save first timestamp found so that delta can be calculated later
+            if not times['start']:
+                times['start'] = time
+            # hours are parsed one by one
+            # first determine the first hour and that will be the first bucket
+            # when the time overflows the hour, move on to next one
             if not start_hour or time > end_hour:
                 start_hour = time.replace(minute=0, second=0, microsecond=0)
                 end_hour = start_hour.replace(hours=+1)
-                print "Start hour: {}".format(start_hour)
-                print "End hour: {}".format(end_hour)
+                log.debug("Start hour: {}".format(start_hour))
+                log.debug("End hour: {}".format(end_hour))
                 per_hour_aggregation[start_hour] = 0
             # line analysis and aggregation happens here
             log.info(time, line)
             stats.increment_line_counter()
+            # increment the per hour line stats
             per_hour_aggregation[start_hour] += 1
             # every line could be the last one, so save the time every time
             times['stop'] = time
@@ -266,8 +294,10 @@ def main():
     print "{} lines parsed".format(stats.line_counter)
     print "File size: {} bytes, {} bytes per line".format(stats.size,
                                                           bytes_per_line)
-    print times
-    print humanize_delta(times['delta'])
+    print "Start time: {}".format(times['start'])
+    print "Stop time: {}".format(times['stop'])
+
+    print "Delta: {}".format(human_delta_string(humanize_delta(times['delta'])))
     keys = per_hour_aggregation.keys()
     keys.sort()
     for hour in keys:
