@@ -179,12 +179,18 @@ def test_get_timestamp_3():
 
 
 def test_get_timestamp_4():
-    test_string = "2015.11.01 15:04:39 #72651112 SERVER: some stuff happened here"
+    test_string = "2015.11.01 15:04:39 #72651112 SERVER: some stuff happened"
     test_timestamp = "2015.11.01 15:04:39"
     assert reican.get_timestamp(test_string)[0] == test_timestamp
 
 
 def test_get_timestamp_5():
+    test_string = "[2017/03/19 10:39:31] playlist.c:125: warn: Parsing play"
+    test_timestamp = "2017/03/19 10:39:31"
+    assert reican.get_timestamp(test_string)[0] == test_timestamp
+
+
+def test_get_timestamp_6():
     """Testing bad timestamp."""
-    test_string = "201lala5-10-30T20:20:11.563278+00:00 lalala lalalalalallalalal"
+    test_string = "201lala5-10-30T20:20:11.563278+00:00 lalala lalalalaalalal"
     assert reican.get_timestamp(test_string) == (None, None)
