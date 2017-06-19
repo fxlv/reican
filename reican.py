@@ -13,7 +13,7 @@ from logbook import FileHandler
 # max file size in lines (10M by default)
 MAX_LINES_TO_READ = 10000000
 # max file size in megabytes
-MAX_FILE_SIZE = "500M"
+MAX_FILE_SIZE = "50M"
 # where to write application log
 LOG_FILE_NAME = "reican.log"
 
@@ -249,7 +249,23 @@ def main():
     end_hour = None
     per_hour_aggregation = {}
     with opener(file_name) as logfile:
+        # first, count the lines in file, this will come in handy in reporting progress
+        line_count = 0
         for line in logfile:
+            line_count += 1
+        # return back to beginning of file
+        if logfile.tell() > 0:
+            logfile.seek(0)
+        one_percent = line_count / float(100)
+        progress_line_count = 0
+        for line in logfile:
+            progress_line_count += 1
+            if progress_line_count % one_percent == 0:
+                current_percentage = progress_line_count / one_percent
+                # display progress message for large files
+                # no need to do this for small ones as it would just scroll by in a moment
+                if line_count > 10000:
+                    print "{}% done. Processed: {} out of {} lines".format(current_percentage, progress_line_count, line_count)
             if stats.max_lines_reached():
                 log.error("MAX_LINES_TO_READ reached")
                 break
