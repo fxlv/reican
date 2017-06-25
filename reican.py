@@ -4,6 +4,7 @@ import os
 import gzip
 import re
 import arrow
+import argparse
 from logbook import Logger
 from logbook import FileHandler
 
@@ -35,15 +36,6 @@ def die(msg=None):
     sys.exit(1)
 
 
-def usage():
-    """Display usage information."""
-    print
-    print "Usage:"
-    print "{} <filename>".format(sys.argv[0])
-    print
-    die(None)
-
-
 def is_readable(file_name):
     """Check if we have permissions to read the file."""
     return os.access(file_name, os.R_OK)
@@ -71,20 +63,6 @@ def get_opener(file_name, stats):
     else:
         opener = open
     return opener
-
-
-def get_file_name():
-    """
-    Handle args and return log file name
-    that is passed as the first argument
-    """
-    if len(sys.argv) != 2:
-        usage()
-    else:
-        file_name = sys.argv[1]
-        if not os.path.exists(file_name):
-            die("File {} does not exist".format(file_name))
-    return file_name
 
 
 class Stats:
@@ -229,7 +207,14 @@ def human_delta_string(delta):
 
 
 def main():
-    file_name = get_file_name()
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('file_name', help="Log file to parse")
+    parser.add_argument('--filter', help="Filter string to search for")
+    args = parser.parse_args()
+    file_name = args.file_name
+    if not os.path.exists(file_name):
+        die("File {} does not exist".format(file_name))
     stats = Stats(file_name)
 
     if not is_readable(file_name):
