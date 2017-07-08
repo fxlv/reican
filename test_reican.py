@@ -36,14 +36,6 @@ def test_die_2(capsys):
     assert out == "\nSomething\n\n"
 
 
-def test_usage(capsys):
-    """Test that Usage message is displayed correctly."""
-    with pytest.raises(SystemExit):
-        reican.usage()
-    out, err = capsys.readouterr()
-    assert len(out) > 40
-    assert "Usage:" in out
-
 
 def test_get_size():
     assert reican.get_size(test_file_name) == test_file_name_size
