@@ -206,12 +206,17 @@ def human_delta_string(delta):
     return delta_string
 
 
-def main():
-
+def parse_args():
+    """Parse command line arguments."""
     parser = argparse.ArgumentParser()
     parser.add_argument('file_name', help="Log file to parse")
     parser.add_argument('--filter', help="Filter string to search for")
-    args = parser.parse_args()
+    return parser.parse_args()
+
+
+def main():
+    """Main application logic goes here."""
+    args = parse_args()
     file_name = args.file_name
     if not os.path.exists(file_name):
         die("File {} does not exist".format(file_name))
