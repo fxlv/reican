@@ -213,6 +213,9 @@ def test_get_timestamp_6():
     assert reican.get_timestamp(test_string) == (None, None)
 
 
+def test_get_line_count():
+    file_handle = open(test_file_name)
+    assert reican.get_line_count(file_handle) == 3
 #
 # Test main application logic 
 #

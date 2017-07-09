@@ -76,7 +76,7 @@ class Stats:
         self.size = get_size(file_name)
         self.compressed = False
         self.bytes_per_line = None
-        self.times = {}
+        self.times = {'start': None, 'stop': None, 'delta': None}
         self.per_hour_aggregation = {}
 
     def max_lines_reached(self):
@@ -263,6 +263,18 @@ def print_summary(stats):
     for hour in keys:
         print hour.format(TIMESTAMP_FORMAT), stats.per_hour_aggregation[hour]
 
+
+def get_line_count(file_handle):
+    """Return line count in an already open file handle."""
+    # first, count the lines in file, this will come in handy in reporting progress
+    line_count = 0
+    for line in file_handle:
+        line_count += 1
+    # return back to beginning of file
+    if file_handle.tell() > 0:
+        file_handle.seek(0)
+    return line_count
+
 def main():
     """Main application logic goes here."""
     args = parse_args()
@@ -271,18 +283,11 @@ def main():
     check_if_file_is_valid(file_name)
 
     opener = get_opener(file_name, stats)
-    stats.times = {'start': None, 'stop': None, 'delta': None}
     start_hour = None
     end_hour = None
     stats.per_hour_aggregation = {}
     with opener(file_name) as logfile:
-        # first, count the lines in file, this will come in handy in reporting progress
-        line_count = 0
-        for line in logfile:
-            line_count += 1
-        # return back to beginning of file
-        if logfile.tell() > 0:
-            logfile.seek(0)
+        line_count = get_line_count(logfile)
         one_percent = line_count / float(100)
         progress_line_count = 0
         for line in logfile:
