@@ -69,11 +69,15 @@ class Stats:
     """Maintain some statistics."""
 
     def __init__(self, file_name):
+        self.file_name = file_name
         self.line_counter = 0
         self.log_start_time = None
         self.log_end_time = None
         self.size = get_size(file_name)
         self.compressed = False
+        self.bytes_per_line = None
+        self.times = {}
+        self.per_hour_aggregation = {}
 
     def max_lines_reached(self):
         if self.line_counter > MAX_LINES_TO_READ:
@@ -238,6 +242,27 @@ def check_if_file_is_valid(file_name):
     return True
 
 
+def print_summary(stats):
+    """Print human readable summary of the log analysis."""
+    print "-" * 80
+    print "Summary:"
+    print "File: {}".format(stats.file_name),
+    if stats.compressed:
+        print ""
+    else:
+        print "."
+    print "{} lines parsed".format(stats.line_counter)
+    print "File size: {} bytes, {} bytes per line".format(stats.size,
+                                                          stats.bytes_per_line)
+    print "Start time: {}".format(stats.times['start'])
+    print "Stop time: {}".format(stats.times['stop'])
+
+    print "Delta: {}".format(human_delta_string(humanize_delta(stats.times['delta'])))
+    keys = stats.per_hour_aggregation.keys()
+    keys.sort()
+    for hour in keys:
+        print hour.format(TIMESTAMP_FORMAT), stats.per_hour_aggregation[hour]
+
 def main():
     """Main application logic goes here."""
     args = parse_args()
@@ -246,10 +271,10 @@ def main():
     check_if_file_is_valid(file_name)
 
     opener = get_opener(file_name, stats)
-    times = {'start': None, 'stop': None, 'delta': None}
+    stats.times = {'start': None, 'stop': None, 'delta': None}
     start_hour = None
     end_hour = None
-    per_hour_aggregation = {}
+    stats.per_hour_aggregation = {}
     with opener(file_name) as logfile:
         # first, count the lines in file, this will come in handy in reporting progress
         line_count = 0
@@ -278,8 +303,8 @@ def main():
                 # skip the line if there's no timestamp
                 pass
             # save first timestamp found so that delta can be calculated later
-            if not times['start']:
-                times['start'] = time
+            if not stats.times['start']:
+                stats.times['start'] = time
             # hours are parsed one by one
             # first determine the first hour and that will be the first bucket
             # when the time overflows the hour, move on to next one
@@ -288,38 +313,21 @@ def main():
                 end_hour = start_hour.replace(hours=+1)
                 log.debug("Start hour: {}".format(start_hour))
                 log.debug("End hour: {}".format(end_hour))
-                per_hour_aggregation[start_hour] = 0
+                stats.per_hour_aggregation[start_hour] = 0
             # line analysis and aggregation happens here
             log.info(time, line)
             stats.increment_line_counter()
             # increment the per hour line stats
-            per_hour_aggregation[start_hour] += 1
+            stats.per_hour_aggregation[start_hour] += 1
             # every line could be the last one, so save the time every time
-            times['stop'] = time
+            stats.times['stop'] = time
 
-    bytes_per_line = stats.size / stats.line_counter
-    times['delta'] = times['stop'] - times['start']
+    stats.bytes_per_line = stats.size / stats.line_counter
+    stats.times['delta'] = stats.times['stop'] - stats.times['start']
     if stats.max_lines_reached():
         print "Max lines limit was reached, parsing incomplete"
         die()
-    print "-" * 80
-    print "Summary:"
-    print "File: {}".format(file_name),
-    if stats.compressed:
-        print ""
-    else:
-        print "."
-    print "{} lines parsed".format(stats.line_counter)
-    print "File size: {} bytes, {} bytes per line".format(stats.size,
-                                                          bytes_per_line)
-    print "Start time: {}".format(times['start'])
-    print "Stop time: {}".format(times['stop'])
-
-    print "Delta: {}".format(human_delta_string(humanize_delta(times['delta'])))
-    keys = per_hour_aggregation.keys()
-    keys.sort()
-    for hour in keys:
-        print hour.format(TIMESTAMP_FORMAT), per_hour_aggregation[hour]
+    print_summary(stats)
 
 
 if __name__ == "__main__":
