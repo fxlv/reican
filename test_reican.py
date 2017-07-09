@@ -49,8 +49,11 @@ def test_file_name_too_big():
 def test_file_name_too_big_bigfile():
     # test file is 20 bytes
     # max size set to 20 bytes
+    original_max_size = reican.MAX_FILE_SIZE
     reican.MAX_FILE_SIZE = "0.000020M"
     assert reican.file_too_big(test_file_name) == True
+    # set the value back to previous
+    reican.MAX_FILE_SIZE = original_max_size
 
 
 #
