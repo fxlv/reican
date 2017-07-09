@@ -216,13 +216,14 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    """Main application logic goes here."""
-    args = parse_args()
-    file_name = args.file_name
+def check_if_file_is_valid(file_name):
+    """
+    Verify if a valid file name has been provided.
+
+    Do several tests to see if file exists, is readable and so on.
+    """
     if not os.path.exists(file_name):
         die("File {} does not exist".format(file_name))
-    stats = Stats(file_name)
 
     if not is_readable(file_name):
         die("File is not readable. Check permissions?")
@@ -233,7 +234,16 @@ def main():
         die("This does not appear to be a text file.")
 
     if file_too_big(file_name):
-        die("File is too big")
+        die("File {} is too big".format(file_name))
+    return True
+
+
+def main():
+    """Main application logic goes here."""
+    args = parse_args()
+    file_name = args.file_name
+    stats = Stats(file_name)
+    check_if_file_is_valid(file_name)
 
     opener = get_opener(file_name, stats)
     times = {'start': None, 'stop': None, 'delta': None}
