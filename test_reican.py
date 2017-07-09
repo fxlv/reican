@@ -36,7 +36,6 @@ def test_die_2(capsys):
     assert out == "\nSomething\n\n"
 
 
-
 def test_get_size():
     assert reican.get_size(test_file_name) == test_file_name_size
 
@@ -54,25 +53,48 @@ def test_file_name_too_big_bigfile():
     assert reican.file_too_big(test_file_name) == True
 
 
-def test_get_file_name():
-    sys.argv = ("./reican.py", test_file_name)
-    assert reican.get_file_name() == test_file_name
-
-
-def test_get_file_name_2():
-    """get_file_name() only works of 2 arguments are passed to reican.py."""
-    sys.argv = ("./reican.py")
-    with pytest.raises(SystemExit):
-        reican.get_file_name()
-
-
-def test_get_file_name_3(capsys):
-    """Test non-existing file name."""
-    sys.argv = ("./reican.py", missing_test_file_name)
+#
+# testing argument handling
+#
+def test_args(capsys):
+    """Test invocation with no arguments or options specified."""
+    sys.argv = ["./reican.py"]
     with pytest.raises(SystemExit) as exc:
-        reican.get_file_name()
+        reican.parse_args()
     out, err = capsys.readouterr()
-    assert out == "\nFile test/test_missing.log does not exist\n\n"
+    assert "error: too few arguments" in err
+
+
+def test_args_file_name():
+    """If only one argument is passed, it must be the log file."""
+    sys.argv = ["./reican.py", test_file_name]
+    args = reican.parse_args()
+    assert args.file_name == test_file_name
+
+
+def test_args_filter_no_parameter(capsys):
+    """
+    Test --filter option with no parameter provided.
+
+    If --filter is passed without a parameter,
+    an error message must be returned because
+    --filter is useless without the actual filtering string specified
+    """
+    sys.argv = ["./reican.py", "some_file_name", "--filter"]
+    with pytest.raises(SystemExit) as exc:
+        reican.parse_args()
+    out, err = capsys.readouterr()
+    print "out:", out
+    print "err:", err
+    assert "error: argument --filter: expected one argument" in err
+
+
+def test_args_filter_with_parameter(capsys):
+    """Test --filter option with a filter string provided."""
+    filter_string = "something_to_filter_by"
+    sys.argv = ["./reican.py", "some_file_name", "--filter", filter_string]
+    args = reican.parse_args()
+    assert args.filter == filter_string
 
 
 def test_get_opener_type():
