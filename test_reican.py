@@ -211,3 +211,15 @@ def test_get_timestamp_6():
     """Testing bad timestamp."""
     test_string = "201lala5-10-30T20:20:11.563278+00:00 lalala lalalalaalalal"
     assert reican.get_timestamp(test_string) == (None, None)
+
+
+#
+# Test main application logic 
+#
+def test_main(capsys):
+    """Test main application logic against test/test.log."""
+    sys.argv = ["./reican.py", "test/test.log"]
+    reican.main()
+    out, err = capsys.readouterr()
+    assert "File size: 221 bytes, 73 bytes per line" in out 
+    assert "Delta: 4 hours, 14 minutes, 50 seconds." in out
