@@ -216,10 +216,19 @@ def test_get_timestamp_6():
 #
 # Test main application logic 
 #
-def test_main(capsys):
+def test_main_test_log(capsys):
     """Test main application logic against test/test.log."""
     sys.argv = ["./reican.py", "test/test.log"]
     reican.main()
     out, err = capsys.readouterr()
     assert "File size: 221 bytes, 73 bytes per line" in out 
     assert "Delta: 4 hours, 14 minutes, 50 seconds." in out
+
+
+def test_main_minidlna_log(capsys):
+    """Test main application logic against test/minidlna.log."""
+    sys.argv = ["./reican.py", "test/minidlna.log"]
+    reican.main()
+    out, err = capsys.readouterr()
+    assert "File size: 2130 bytes, 101 bytes per line" in out 
+    assert "Delta: 32 days, 19 hours, 4 minutes, 59 seconds." in out
