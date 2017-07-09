@@ -144,12 +144,14 @@ def get_time(log_line):
 def get_size(file_name):
     """Return file size in bytes."""
     size_bytes = os.stat(file_name).st_size
+    log.debug("File size for {} is {} bytes".format(file_name, size_bytes))
     return size_bytes
 
 
 def file_too_big(file_name):
     """Convert MAX_FILE_SIZE to bytes and check against the given file."""
     max_file_size_bytes = float(MAX_FILE_SIZE.replace("M", "")) * 1024 * 1024
+    log.debug("Max file size is: {} bytes".format(max_file_size_bytes))
     if float(max_file_size_bytes) < get_size(file_name):
         return True
     return False
