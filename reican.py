@@ -110,7 +110,8 @@ def get_timestamp(line):
         "([0-9]{10}\.[0-9]{3})": None,
         "^([0-9]{4}\.[0-9]{2}\.[0-9]{2}\s[0-9:]{2}:[0-9]{2}:[0-9]{2})":
         "YYYY.MM.DD HH:mm:ss",
-        "([0-9]{4}/[0-9]{2}/[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2})": "YYYY/MM/DD HH:mm:ss"
+        "([0-9]{4}/[0-9]{2}/[0-9]{2}\s[0-9]{2}:[0-9]{2}:[0-9]{2})":
+        "YYYY/MM/DD HH:mm:ss"
     }
     time_format = None
     for regex in regexes:
@@ -257,7 +258,8 @@ def print_summary(stats):
     print "Start time: {}".format(stats.times['start'])
     print "Stop time: {}".format(stats.times['stop'])
 
-    print "Delta: {}".format(human_delta_string(humanize_delta(stats.times['delta'])))
+    print "Delta: {}".format(
+        human_delta_string(humanize_delta(stats.times['delta'])))
     keys = stats.per_hour_aggregation.keys()
     keys.sort()
     for hour in keys:
@@ -274,6 +276,7 @@ def get_line_count(file_handle):
     if file_handle.tell() > 0:
         file_handle.seek(0)
     return line_count
+
 
 def main():
     """Main application logic goes here."""
@@ -297,7 +300,8 @@ def main():
                 # display progress message for large files
                 # no need to do this for small ones as it would just scroll by in a moment
                 if line_count > 10000:
-                    print "{}% done. Processed: {} out of {} lines".format(current_percentage, progress_line_count, line_count)
+                    print "{}% done. Processed: {} out of {} lines".format(
+                        current_percentage, progress_line_count, line_count)
             if stats.max_lines_reached():
                 log.error("MAX_LINES_TO_READ reached")
                 break
