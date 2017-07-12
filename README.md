@@ -3,6 +3,21 @@
 Reican goes and finds stuff from your logs.
 Not much here yet but soon the Reican will be able to do useful stuff.
 
+Idea is to write something that helps getting immediate, but basic, understanding
+of what is happening in a specific log file.
+
+For example, has the log volume always been like this?
+Easy way to check is to run Reican with no filter - this will gove you sort of a breakdown per hour.
+
+If there's something more specific you're looking for, filtering by string provides the same per-hour bucketing, but this time only for lines that match your filter string.
+
+Hopefully this will grow into something useful eventually, but for now I use this project to learn more about testing and TDD.
+
+## Getting started
+
+Just clone and run `./setup.sh` to handle the dependencies.
+Afterwards `./reican.py <log_file_name>` is all you need to get going.
+
 ## Timestamps
 
 Supported formats:
