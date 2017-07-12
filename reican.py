@@ -247,7 +247,10 @@ def print_summary(stats):
     """Print human readable summary of the log analysis."""
     print "-" * 80
     print "Summary:"
+    if stats.filter_string:
+        print "Filtering by string: '{}'".format(stats.filter_string)
     print "File: {}".format(stats.file_name),
+
     if stats.compressed:
         print ""
     else:
@@ -284,16 +287,21 @@ def main():
     file_name = args.file_name
     stats = Stats(file_name)
     check_if_file_is_valid(file_name)
-
     opener = get_opener(file_name, stats)
+    filter_string = args.filter
+    stats.filter_string = filter_string
     start_hour = None
     end_hour = None
-    stats.per_hour_aggregation = {}
     with opener(file_name) as logfile:
         line_count = get_line_count(logfile)
         one_percent = line_count / float(100)
         progress_line_count = 0
         for line in logfile:
+            if filter_string:
+                if filter_string not in line:
+                    # if filtering string is specified,
+                    # skip any lines that don't contain that string
+                    continue
             progress_line_count += 1
             if progress_line_count % one_percent == 0:
                 current_percentage = progress_line_count / one_percent
