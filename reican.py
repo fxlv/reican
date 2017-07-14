@@ -3,8 +3,9 @@ import sys
 import os
 import gzip
 import re
-import arrow
 import argparse
+import time
+import arrow
 from logbook import Logger
 from logbook import FileHandler
 
@@ -26,6 +27,25 @@ log = Logger("Reican")
 log.info("Logging started")
 
 
+def func_log(function_name):
+    """Decorator for logging and timing function execution."""
+    def log_it(*args, **kwargs):
+        """Log function and its args, execute the function and return the result."""
+        t_start = time.time()
+        result = function_name(*args, **kwargs)
+        t_end = time.time() - t_start
+        msg = "Function call: {}".format(function_name.__name__)
+        if args:
+            msg += " with args: {}".format(args)
+        if kwargs:
+            msg += " with kwargs {}".format(args, kwargs)
+        msg += " executed in: {:5.5f} sec".format(t_end)
+        log.debug(msg)
+        return result
+    return log_it
+
+
+@func_log
 def die(msg=None):
     """Print a message and exit."""
     if msg:
@@ -36,11 +56,13 @@ def die(msg=None):
     sys.exit(1)
 
 
+@func_log
 def is_readable(file_name):
     """Check if we have permissions to read the file."""
     return os.access(file_name, os.R_OK)
 
 
+@func_log
 def get_opener(file_name, stats):
     """
     Return opener function based on extension fo the file.
@@ -86,7 +108,6 @@ class Stats:
 
     def increment_line_counter(self):
         self.line_counter += 1
-
 
 def get_timestamp(line):
     """
@@ -146,6 +167,7 @@ def get_time(log_line):
     return time
 
 
+@func_log
 def get_size(file_name):
     """Return file size in bytes."""
     size_bytes = os.stat(file_name).st_size
@@ -153,6 +175,7 @@ def get_size(file_name):
     return size_bytes
 
 
+@func_log
 def file_too_big(file_name):
     """Convert MAX_FILE_SIZE to bytes and check against the given file."""
     max_file_size_bytes = float(MAX_FILE_SIZE.replace("M", "")) * 1024 * 1024
@@ -213,6 +236,7 @@ def human_delta_string(delta):
     return delta_string
 
 
+@func_log
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser()
@@ -269,6 +293,7 @@ def print_summary(stats):
         print hour.format(TIMESTAMP_FORMAT), stats.per_hour_aggregation[hour]
 
 
+@func_log
 def get_line_count(file_handle):
     """Return line count in an already open file handle."""
     # first, count the lines in file, this will come in handy in reporting progress
