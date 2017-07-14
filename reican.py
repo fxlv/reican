@@ -305,7 +305,38 @@ def get_line_count(file_handle):
         file_handle.seek(0)
     return line_count
 
+class ProgressTracker:
 
+    @func_log
+    def __init__(self, logfile_handle):
+        self.line_count = get_line_count(logfile_handle)
+        self.one_percent = self.line_count / float(100)
+        self.current_line = 0
+        self.current_percentage = 0
+        self.new_percentage = 0
+        self.time_last = time.time()
+    
+    @func_log
+    def increment(self):
+        self.current_line += 1
+
+    @func_log
+    def report(self):    
+        # if one percent increment is reached 
+        if self.current_line % self.one_percent < 3:
+            self.new_percentage = int(self.current_line / self.one_percent)
+            # and this is a new percentage point
+            if self.new_percentage > self.current_percentage:
+                # and at least 2 seconds have passed since previous % progress update
+                next_update = self.time_last + 1
+                if time.time() > next_update:
+                    print "{}% done. Processed: {} out of {} lines".format(
+                        self.current_percentage, self.current_line, self.line_count)
+                    self.time_last = time.time()
+                self.current_percentage = self.new_percentage
+        
+
+@func_log
 def main():
     """Main application logic goes here."""
     args = parse_args()
@@ -318,23 +349,16 @@ def main():
     start_hour = None
     end_hour = None
     with opener(file_name) as logfile:
-        line_count = get_line_count(logfile)
-        one_percent = line_count / float(100)
-        progress_line_count = 0
+        progress = ProgressTracker(logfile)
+        # start iterating over lines
         for line in logfile:
+            progress.increment()
+            progress.report()
             if filter_string:
                 if filter_string not in line:
                     # if filtering string is specified,
                     # skip any lines that don't contain that string
                     continue
-            progress_line_count += 1
-            if progress_line_count % one_percent == 0:
-                current_percentage = progress_line_count / one_percent
-                # display progress message for large files
-                # no need to do this for small ones as it would just scroll by in a moment
-                if line_count > 10000:
-                    print "{}% done. Processed: {} out of {} lines".format(
-                        current_percentage, progress_line_count, line_count)
             if stats.max_lines_reached():
                 log.error("MAX_LINES_TO_READ reached")
                 break
@@ -357,7 +381,7 @@ def main():
                 log.debug("End hour: {}".format(end_hour))
                 stats.per_hour_aggregation[start_hour] = 0
             # line analysis and aggregation happens here
-            log.info(time, line)
+            log.debug(time, line)
             stats.increment_line_counter()
             # increment the per hour line stats
             stats.per_hour_aggregation[start_hour] += 1
