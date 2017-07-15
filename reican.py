@@ -167,6 +167,10 @@ def get_time(log_line):
     return time
 
 
+def is_same_day(date1, date2):
+    """Compare two dates in arrow format and return True if they are the same day."""
+    return date1.date() == date2.date()
+
 @func_log
 def get_size(file_name):
     """Return file size in bytes."""
@@ -242,7 +246,18 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('file_name', help="Log file to parse")
     parser.add_argument('--filter', help="Filter string to search for")
-    return parser.parse_args()
+    parser.add_argument('--date', help="Date string to search for")
+
+    args = parser.parse_args()
+    # try to parse the provided date, but if that die()'
+    if args.date:
+        try:
+            args.date = arrow.get(args.date)
+        except (arrow.parser.ParserError, TypeError) as exc:
+            log.warn("Exception while parsing date '{}'".format(exc))
+            log.warn("Could not parse date '{}'".format(args.date))
+            die("Invalid date specified")
+    return args
 
 
 def check_if_file_is_valid(file_name):
@@ -365,6 +380,13 @@ def main():
             line = line.strip()
             # parse line and get the timestamp
             time = get_time(line)
+            log.debug("Got time: {}".format(time))
+            # if date has been specified, discard any lines that do not match it
+            if args.date:
+                args.date = arrow.get(args.date)
+                if not is_same_day(time, args.date):
+                    log.debug("Skipping non-matching date {}".format(time))
+                    continue
             if not time:
                 # skip the line if there's no timestamp
                 pass
