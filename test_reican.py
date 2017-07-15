@@ -4,6 +4,7 @@ import types
 import pytest
 import mock
 import reican
+import arrow
 
 # cspell:ignore reican, pytest, lzma
 test_file_name = "test/test.log"
@@ -99,7 +100,16 @@ def test_args_filter_with_parameter(capsys):
     args = reican.parse_args()
     assert args.filter == filter_string
 
+def test_args_date_with_parameter(capsys):
+    """Test --date option with a date string set to year-month-day."""
+    date_string = "2017-06-12"
+    sys.argv = ["./reican.py", "some_file_name", "--date", date_string]
+    args = reican.parse_args()
+    assert args.date == arrow.get(date_string)
 
+#
+# Testing everything else
+# 
 def test_get_opener_type():
     opener = reican.get_opener(test_file_name, stats)
     assert isinstance(opener, types.BuiltinFunctionType)
