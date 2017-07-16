@@ -29,6 +29,7 @@ log.info("Logging started")
 
 def func_log(function_name):
     """Decorator for logging and timing function execution."""
+
     def log_it(*args, **kwargs):
         """Log function and its args, execute the function and return the result."""
         t_start = time.time()
@@ -42,6 +43,7 @@ def func_log(function_name):
         msg += " executed in: {:5.5f} sec".format(t_end)
         log.debug(msg)
         return result
+
     return log_it
 
 
@@ -109,6 +111,7 @@ class Stats:
     def increment_line_counter(self):
         self.line_counter += 1
 
+
 def get_timestamp(line):
     """
     Find the timestamp in a log line.
@@ -170,6 +173,7 @@ def get_time(log_line):
 def is_same_day(date1, date2):
     """Compare two dates in arrow format and return True if they are the same day."""
     return date1.date() == date2.date()
+
 
 @func_log
 def get_size(file_name):
@@ -320,8 +324,8 @@ def get_line_count(file_handle):
         file_handle.seek(0)
     return line_count
 
-class ProgressTracker:
 
+class ProgressTracker:
     @func_log
     def __init__(self, logfile_handle):
         self.line_count = get_line_count(logfile_handle)
@@ -330,13 +334,13 @@ class ProgressTracker:
         self.current_percentage = 0
         self.new_percentage = 0
         self.time_last = time.time()
-    
+
     @func_log
     def increment(self):
         self.current_line += 1
 
     @func_log
-    def report(self):    
+    def report(self):
         # if one percent increment is reached 
         if self.current_line % self.one_percent < 3:
             self.new_percentage = int(self.current_line / self.one_percent)
@@ -346,10 +350,11 @@ class ProgressTracker:
                 next_update = self.time_last + 1
                 if time.time() > next_update:
                     print "{}% done. Processed: {} out of {} lines".format(
-                        self.current_percentage, self.current_line, self.line_count)
+                        self.current_percentage, self.current_line,
+                        self.line_count)
                     self.time_last = time.time()
                 self.current_percentage = self.new_percentage
-        
+
 
 @func_log
 def main():
