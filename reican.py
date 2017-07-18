@@ -102,6 +102,7 @@ class Stats:
         self.bytes_per_line = None
         self.times = {'start': None, 'stop': None, 'delta': None}
         self.per_hour_aggregation = {}
+        self.lines = {}
 
     def max_lines_reached(self):
         if self.line_counter > MAX_LINES_TO_READ:
@@ -356,6 +357,39 @@ class ProgressTracker:
                 self.current_percentage = self.new_percentage
 
 
+def analyze_stats(stats):
+    # iterate over all the lines from 'stats'
+    start_hour = None
+    end_hour = None
+    for line in stats.lines:
+        time = stats.lines[line]
+        # save first timestamp found so that delta can be calculated later
+        if not stats.times['start']:
+            stats.times['start'] = time
+        # hours are parsed one by one
+        # first determine the first hour and that will be the first bucket
+        # when the time overflows the hour, move on to next one
+        if not start_hour or time > end_hour:
+            start_hour = time.replace(minute=0, second=0, microsecond=0)
+            end_hour = start_hour.replace(hours=+1)
+            log.debug("Start hour: {}".format(start_hour))
+            log.debug("End hour: {}".format(end_hour))
+            stats.per_hour_aggregation[start_hour] = 0
+        # line analysis and aggregation happens here
+        log.debug("Stats line #{} time: {}".format(line, time))
+        stats.increment_line_counter()
+        # increment the per hour line stats
+        stats.per_hour_aggregation[start_hour] += 1
+        # every line could be the last one, so save the time every time
+        stats.times['stop'] = time
+    stats.bytes_per_line = stats.size / stats.line_counter
+    stats.times['delta'] = stats.times['stop'] - stats.times['start']
+    if stats.max_lines_reached():
+        print "Max lines limit was reached, parsing incomplete"
+        die()
+    return stats
+
+
 @func_log
 def main():
     """Main application logic goes here."""
@@ -366,11 +400,12 @@ def main():
     opener = get_opener(file_name, stats)
     filter_string = args.filter
     stats.filter_string = filter_string
-    start_hour = None
-    end_hour = None
+   
     with opener(file_name) as logfile:
         progress = ProgressTracker(logfile)
-        # start iterating over lines
+        # start iterating over lines, initially aim is to filter-out anything that can be skipped
+        # such as, lines not containing required string, 
+        # not containing timestamps or not mathing the date that was requested
         for line in logfile:
             progress.increment()
             progress.report()
@@ -395,31 +430,9 @@ def main():
             if not time:
                 # skip the line if there's no timestamp
                 pass
-            # save first timestamp found so that delta can be calculated later
-            if not stats.times['start']:
-                stats.times['start'] = time
-            # hours are parsed one by one
-            # first determine the first hour and that will be the first bucket
-            # when the time overflows the hour, move on to next one
-            if not start_hour or time > end_hour:
-                start_hour = time.replace(minute=0, second=0, microsecond=0)
-                end_hour = start_hour.replace(hours=+1)
-                log.debug("Start hour: {}".format(start_hour))
-                log.debug("End hour: {}".format(end_hour))
-                stats.per_hour_aggregation[start_hour] = 0
-            # line analysis and aggregation happens here
-            log.debug(time, line)
-            stats.increment_line_counter()
-            # increment the per hour line stats
-            stats.per_hour_aggregation[start_hour] += 1
-            # every line could be the last one, so save the time every time
-            stats.times['stop'] = time
-
-    stats.bytes_per_line = stats.size / stats.line_counter
-    stats.times['delta'] = stats.times['stop'] - stats.times['start']
-    if stats.max_lines_reached():
-        print "Max lines limit was reached, parsing incomplete"
-        die()
+            # add the extracted line number and timestamp to stats object for later analysis
+            stats.lines[progress.current_line] = time
+    stats = analyze_stats(stats)
     print_summary(stats)
 
 
