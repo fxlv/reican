@@ -9,6 +9,12 @@ import arrow
 from logbook import Logger
 from logbook import FileHandler
 
+
+# import ptvsd
+# ptvsd.enable_attach("supersecret", address = ('0.0.0.0', 8000))
+# ptvsd.wait_for_attach()
+
+
 # I use cspell plugin for spell checking, and I want it to ignore few words
 # cspell:ignore reican lzma isdir
 

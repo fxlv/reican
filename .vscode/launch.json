@@ -18,6 +18,17 @@
                 "WaitOnNormalExit",
                 "RedirectOutput"
             ]
+        },
+
+        {
+            "name": "Attach (Remote Debug)",
+            "type": "python",
+            "request": "attach",
+            "localRoot": "${workspaceRoot}",
+            "remoteRoot": "/resources/github/reican",
+            "port": 8000,
+            "secret": "supersecret",
+            "host":"localhost"
         }
        
     ]
