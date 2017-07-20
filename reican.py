@@ -73,7 +73,7 @@ def is_readable(file_name):
 @func_log
 def get_opener(file_name, stats):
     """
-    Return opener function based on extension fo the file.
+    Return opener function based on extension of the file.
 
     Support for different types of files based on their extension.
     Return 'open' object that can afterwards be iterated.
@@ -109,6 +109,8 @@ class Stats:
         self.times = {'start': None, 'stop': None, 'delta': None}
         self.per_hour_aggregation = {}
         self.lines = {}
+        self.filter_string = None
+        self.filter_date = None
 
     def max_lines_reached(self):
         if self.line_counter > MAX_LINES_TO_READ:
@@ -397,16 +399,8 @@ def analyze_stats(stats):
 
 
 @func_log
-def main():
-    """Main application logic goes here."""
-    args = parse_args()
-    file_name = args.file_name
-    stats = Stats(file_name)
-    check_if_file_is_valid(file_name)
+def parse_file(file_name, stats):
     opener = get_opener(file_name, stats)
-    filter_string = args.filter
-    stats.filter_string = filter_string
-   
     with opener(file_name) as logfile:
         progress = ProgressTracker(logfile)
         # start iterating over lines, initially aim is to filter-out anything that can be skipped
@@ -415,8 +409,8 @@ def main():
         for line in logfile:
             progress.increment()
             progress.report()
-            if filter_string:
-                if filter_string not in line:
+            if stats.filter_string:
+                if stats.filter_string not in line:
                     # if filtering string is specified,
                     # skip any lines that don't contain that string
                     continue
@@ -428,9 +422,9 @@ def main():
             time = get_time(line)
             log.debug("Got time: {}".format(time))
             # if date has been specified, discard any lines that do not match it
-            if args.date:
-                args.date = arrow.get(args.date)
-                if not is_same_day(time, args.date):
+            if stats.filter_date:
+                stats.filter_date = arrow.get(stats.filter_date)
+                if not is_same_day(time, stats.filter_date):
                     log.debug("Skipping non-matching date {}".format(time))
                     continue
             if not time:
@@ -438,6 +432,19 @@ def main():
                 pass
             # add the extracted line number and timestamp to stats object for later analysis
             stats.lines[progress.current_line] = time
+    return stats
+
+
+def main():
+    """Main application logic goes here."""
+    args = parse_args()
+    file_name = args.file_name
+    stats = Stats(file_name)
+    check_if_file_is_valid(file_name)
+    stats.filter_string = args.filter
+    stats.filter_date = args.date
+
+    stats = parse_file(file_name, stats)    
     stats = analyze_stats(stats)
     print_summary(stats)
 
