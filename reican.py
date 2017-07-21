@@ -335,8 +335,10 @@ def get_line_count(file_handle):
 
 
 class ProgressTracker:
+    """Track progress for reading the file."""
     @func_log
     def __init__(self, logfile_handle):
+        """Set up all the attributes."""
         self.line_count = get_line_count(logfile_handle)
         self.one_percent = self.line_count / float(100)
         self.current_line = 0
@@ -346,10 +348,12 @@ class ProgressTracker:
 
     @func_log
     def increment(self):
+        """Increment line counter by 1."""
         self.current_line += 1
 
     @func_log
     def report(self):
+        """Print progress message, if +1% progress has been reached."""
         # if one percent increment is reached 
         if self.current_line % self.one_percent < 3:
             self.new_percentage = int(self.current_line / self.one_percent)
@@ -366,7 +370,7 @@ class ProgressTracker:
 
 
 def analyze_stats(stats):
-    # iterate over all the lines from 'stats'
+    """Iterate over the 'stats' and sort lines into per-hour buckets."""
     start_hour = None
     end_hour = None
     for line in stats.lines:
@@ -400,11 +404,18 @@ def analyze_stats(stats):
 
 @func_log
 def parse_file(file_name, stats):
+    """
+    Parse the file and return stats object.
+
+    Read the file line by line.
+    Ignore lines that do not match the filter string or the date.
+    For every matching line, parse the date and add it to 'stats' object.
+    """
     opener = get_opener(file_name, stats)
     with opener(file_name) as logfile:
         progress = ProgressTracker(logfile)
         # start iterating over lines, initially aim is to filter-out anything that can be skipped
-        # such as, lines not containing required string, 
+        # such as, lines not containing required string,
         # not containing timestamps or not mathing the date that was requested
         for line in logfile:
             progress.increment()
@@ -443,8 +454,7 @@ def main():
     check_if_file_is_valid(file_name)
     stats.filter_string = args.filter
     stats.filter_date = args.date
-
-    stats = parse_file(file_name, stats)    
+    stats = parse_file(file_name, stats)
     stats = analyze_stats(stats)
     print_summary(stats)
 
