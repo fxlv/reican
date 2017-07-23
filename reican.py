@@ -111,6 +111,8 @@ class Stats:
         self.lines = {}
         self.filter_string = None
         self.filter_date = None
+        # will be set to True once analyzed
+        self.analyzed = False
 
     def max_lines_reached(self):
         if self.line_counter > MAX_LINES_TO_READ:
@@ -399,6 +401,7 @@ def analyze_stats(stats):
     if stats.max_lines_reached():
         print "Max lines limit was reached, parsing incomplete"
         die()
+    stats.analyzed = True
     return stats
 
 
