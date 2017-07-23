@@ -8,11 +8,15 @@ import arrow
 
 # cspell:ignore reican, pytest, lzma
 test_file_name = "test/test.log"
+test_file_name_compressed = "test/test.log.gz"
+
 missing_test_file_name = "test/test_missing.log"
 
 test_file_name_size = 221
+test_file_name_compressed_size = 44
 
-#def test_get_size():
+
+# def test_get_size():
 #    def mockreturn(argv):
 #        return ("stuff")
 #    import os
@@ -43,7 +47,7 @@ def test_get_size():
 
 # default test file is small so this should pass
 def test_file_name_too_big():
-    assert reican.file_too_big(test_file_name) == False
+    assert reican.file_too_big(test_file_name) is False
 
 
 # change max file size to test that larger files will get rejected
@@ -52,7 +56,7 @@ def test_file_name_too_big_bigfile():
     # max size set to 20 bytes
     original_max_size = reican.MAX_FILE_SIZE
     reican.MAX_FILE_SIZE = "0.000020M"
-    assert reican.file_too_big(test_file_name) == True
+    assert reican.file_too_big(test_file_name) is True
     # set the value back to previous
     reican.MAX_FILE_SIZE = original_max_size
 
@@ -111,7 +115,7 @@ def test_args_date_with_parameter(capsys):
 
 #
 # Testing everything else
-# 
+#
 def test_get_opener_type():
     opener = reican.get_opener(test_file_name, stats)
     assert isinstance(opener, types.BuiltinFunctionType)
@@ -199,8 +203,8 @@ def test_get_timestamp_2():
 
 def test_get_timestamp_3():
     test_string = '''127.0.0.1 - - [31/Oct/2015:11:00:13 +0000]
-    [1446314353.403] "GET /index.html HTTP/1.1" 200 54510 "-" 
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0) 
+    [1446314353.403] "GET /index.html HTTP/1.1" 200 54510 "-"
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_0)
     AppleWebKit/537.36 (KHTML,'''
 
     test_timestamp = "1446314353.403"
@@ -230,8 +234,37 @@ def test_get_line_count():
     assert reican.get_line_count(file_handle) == 3
 
 
+def test_parse_file_uncompressed():
+    """Test line parser on 'test/test.log'."""
+    stats = reican.Stats(test_file_name)
+    stats = reican.parse_file(test_file_name, stats)
+    assert isinstance(stats, reican.Stats)
+    assert stats.size == test_file_name_size
+    assert len(stats.lines) == 3
+    assert stats.compressed is False
+
+
+def test_parse_file_compressed():
+    """Test line parser on 'test/test.log.gz'."""
+    stats = reican.Stats(test_file_name_compressed)
+    stats = reican.parse_file(test_file_name_compressed, stats)
+    assert isinstance(stats, reican.Stats)
+    assert stats.size == test_file_name_compressed_size
+    assert len(stats.lines) == 3
+    assert stats.compressed
+
+
+def test_analyze_stats():
+    """Test analyze_stats() with test/test.log."""
+    stats = reican.Stats(test_file_name)
+    stats = reican.parse_file(test_file_name, stats)
+    stats = reican.analyze_stats(stats)
+    times = stats.times
+    assert stats.analyzed is True
+    assert times['delta'].total_seconds() == 15290.159069
+    assert stats.bytes_per_line == 73
 #
-# Test main application logic 
+# Test main application logic
 #
 def test_main_test_log(capsys):
     """Test main application logic against test/test.log."""
