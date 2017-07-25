@@ -6,6 +6,7 @@ import re
 import argparse
 import time
 import arrow
+import datetime
 from logbook import Logger
 from logbook import FileHandler
 
@@ -108,6 +109,9 @@ class Stats:
         self.bytes_per_line = None
         self.times = {'start': None, 'stop': None, 'delta': None}
         self.per_hour_aggregation = {}
+        self.per_day_aggregation = {}
+        # aggregation with year being the top-most bucket
+        self.aggregation = {}
         self.lines = {}
         self.filter_string = None
         self.filter_date = None
@@ -371,31 +375,43 @@ class ProgressTracker:
                 self.current_percentage = self.new_percentage
 
 
+
 def analyze_stats(stats):
     """Iterate over the 'stats' and sort lines into per-hour buckets."""
-    start_hour = None
-    end_hour = None
     for line in stats.lines:
         time = stats.lines[line]
+        stats.increment_line_counter()
         # save first timestamp found so that delta can be calculated later
         if not stats.times['start']:
             stats.times['start'] = time
-        # hours are parsed one by one
-        # first determine the first hour and that will be the first bucket
-        # when the time overflows the hour, move on to next one
-        if not start_hour or time > end_hour:
-            start_hour = time.replace(minute=0, second=0, microsecond=0)
-            end_hour = start_hour.replace(hours=+1)
-            log.debug("Start hour: {}".format(start_hour))
-            log.debug("End hour: {}".format(end_hour))
-            stats.per_hour_aggregation[start_hour] = 0
-        # line analysis and aggregation happens here
-        log.debug("Stats line #{} time: {}".format(line, time))
-        stats.increment_line_counter()
-        # increment the per hour line stats
-        stats.per_hour_aggregation[start_hour] += 1
-        # every line could be the last one, so save the time every time
+        # any line can be the last line
         stats.times['stop'] = time
+        hour = time.datetime.hour
+        day = time.datetime.day
+        month = time.datetime.month
+        year = time.datetime.year
+
+        if year not in stats.aggregation:
+            stats.aggregation[year] = {}
+        
+        if month not in stats.aggregation[year]:
+            stats.aggregation[year][month] = {}
+        
+        if day not in stats.aggregation[year][month]:
+            stats.aggregation[year][month][day] = {}
+
+        if hour not in stats.aggregation[year][month][day]:
+            stats.aggregation[year][month][day][hour] = 0
+        # increment hour counter by 1
+        stats.aggregation[year][month][day][hour] += 1
+    # for backwards compatibility, calculate per hour aggregation
+    for year in stats.aggregation:
+        for month in stats.aggregation[year]:
+            for day in stats.aggregation[year][month]:
+                for hour in stats.aggregation[year][month][day]:
+                    current_hour = arrow.get("{}-{:02d}-{:02d} {:02d}:00:00".format(year, month, day, hour))
+                    stats.per_hour_aggregation[current_hour] = stats.aggregation[year][month][day][hour]
+    # once all lines have been analyzed, calculate some summary data
     stats.bytes_per_line = stats.size / stats.line_counter
     stats.times['delta'] = stats.times['stop'] - stats.times['start']
     if stats.max_lines_reached():
@@ -403,7 +419,6 @@ def analyze_stats(stats):
         die()
     stats.analyzed = True
     return stats
-
 
 @func_log
 def parse_file(file_name, stats):
