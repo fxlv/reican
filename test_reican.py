@@ -8,11 +8,15 @@ import arrow
 
 # cspell:ignore reican, pytest, lzma
 test_file_name = "test/test.log"
+test_file_name2 = "test/minidlna.log"
+
 test_file_name_compressed = "test/test.log.gz"
 
 missing_test_file_name = "test/test_missing.log"
 
 test_file_name_size = 221
+test_file_name2_size = 221
+
 test_file_name_compressed_size = 44
 
 
@@ -254,7 +258,7 @@ def test_parse_file_compressed():
     assert stats.compressed
 
 
-def test_analyze_stats():
+def test_analyze_stats_1():
     """Test analyze_stats() with test/test.log."""
     stats = reican.Stats(test_file_name)
     stats = reican.parse_file(test_file_name, stats)
@@ -263,6 +267,22 @@ def test_analyze_stats():
     assert stats.analyzed is True
     assert times['delta'].total_seconds() == 15290.159069
     assert stats.bytes_per_line == 73
+    assert len(stats.per_hour_aggregation) == 3
+    assert isinstance(stats.aggregation[2015], dict)
+    assert stats.aggregation[2015][10][31][10] == 1
+
+def test_analyze_stats_2():
+    """Test analyze_stats() with test/minidlna."""
+    stats = reican.Stats(test_file_name2)
+    stats = reican.parse_file(test_file_name2, stats)
+    stats = reican.analyze_stats(stats)
+    times = stats.times
+    assert stats.analyzed is True
+    assert times['delta'].total_seconds() == 2833499.0
+    assert stats.bytes_per_line == 101
+    assert len(stats.per_hour_aggregation) == 11
+    assert isinstance(stats.aggregation[2017], dict)
+    assert stats.aggregation[2017][3][25][18] == 2
 #
 # Test main application logic
 #
