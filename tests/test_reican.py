@@ -3,7 +3,7 @@ import sys
 import types
 import pytest
 import mock
-import reican
+from reican import reican
 import arrow
 
 # cspell:ignore reican, pytest, lzma

@@ -1,4 +1,3 @@
 #!/bin/bash
-py.test -v test_reican.py
-
-pytest --durations=5 --cov-report=term-missing --cov=. test_reican.py
+PYTHONPATH=. py.test -v
+PYTHONPATH=. pytest --durations=6 --cov-report=term-missing --cov=.
