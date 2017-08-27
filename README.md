@@ -27,18 +27,6 @@ Supported formats:
 * 1446236678.247
 * 2017/03/19 10:39:31
 
-## Virtualenv
-
-For the first time:
-```
-sudo pip install virtualenv
-virtualenv venv
-```
-Then Every time:
-```
-source venv/bin/activate
-```
-
 ## Dependencies
 
 Inside the virtualenv you might want to have:
